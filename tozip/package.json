@@ -1,0 +1,15 @@
+{
+  "name": "resize-blur-image",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Means",
+  "license": "ISC",
+  "devDependencies": {
+    "sharp": "^0.31.3"
+  }
+}
