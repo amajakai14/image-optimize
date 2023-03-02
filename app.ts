@@ -1,6 +1,7 @@
 import { S3Client } from "@aws-sdk/client-s3";
 import fs from "fs";
 import sharp from "sharp";
+import { Readable } from "stream";
 
 import { GetObjectCommand } from "@aws-sdk/client-s3";
 const s3Client = new S3Client({ region: "ap-northeast-1" });
@@ -13,10 +14,16 @@ async function main() {
     };
     const getObjectCommand = new GetObjectCommand(getObjectParam);
 
-    const response = await getObject("test-restaurant", "my-kaki/1.jpg");
-    const bf = Buffer.concat(response);
+    const response = await s3Client.send(getObjectCommand);
+    const stream = response.Body as Readable;
+    const chunk = await new Promise<Buffer>((resolve, reject) => {
+      const chunks: Buffer[] = [];
+      stream.on("data", (chunk) => chunks.push(chunk));
+      stream.once("end", () => resolve(Buffer.concat(chunks)));
+      stream.once("error", reject);
+    });
 
-    const resizedImage = await sharp(bf).resize(500, 500).webp().toBuffer();
+    const resizedImage = await sharp(chunk).resize(500, 500).webp().toBuffer();
 
     fs.writeFileSync("1.webp", resizedImage);
   } catch (err) {

@@ -11,19 +11,26 @@ async function main() {
       Bucket: "test-restaurant",
       Key: "my-kaki/1.jpg",
     };
-    const response = await getObject("test-restaurant", "my-kaki/1.jpg");
+    const getObjectCommand = new GetObjectCommand(getObjectParam);
 
-    const resizedImage = await sharp(response)
-      .resize(500, 500)
-      .webp()
-      .toBuffer();
+    const response = await s3Client.send(getObjectCommand);
+    const stream = response.Body;
+    const x = new Promise((resolve, reject) => {
+      const chunks = [];
+      stream.on("data", (chunk) => chunks.push(chunk));
+      stream.once("end", () => resolve(Buffer.concat(chunks)));
+      stream.once("error", reject);
+    });
+    const bf = await x;
+
+    const resizedImage = await sharp(bf).resize(500, 500).webp().toBuffer();
 
     fs.writeFileSync("1.webp", resizedImage);
   } catch (err) {
     console.log(err);
   }
 }
-async function getObject(Bucket, Key) {
+function getObject(Bucket, Key) {
   return new Promise(async (resolve, reject) => {
     const getObjectCommand = new GetObjectCommand({ Bucket, Key });
 
